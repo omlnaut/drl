@@ -23,7 +23,8 @@ HYPERPARAMS = {
         'epsilon_final':    0.02,
         'learning_rate':    0.0001,
         'gamma':            0.99,
-        'batch_size':       32
+        'batch_size':       32,
+        'n':4
     })
 }
 
@@ -96,7 +97,7 @@ def unpack_batch_(batch):
            np.array(dones, dtype=np.uint8), \
            np.array(last_states, copy=False)
 
-def unpack_batch(batch):
+def unpack_batch(batch, device=torch.device('cuda')):
     states, actions, rewards, dones, last_states = [],[],[],[],[]
     for exp in batch:
         state = np.array(exp.state)
