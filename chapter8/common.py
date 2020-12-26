@@ -1,9 +1,13 @@
+#dqn_ptan.ipynb
 from types import SimpleNamespace
 import torch
 import torch.nn as nn
 
 import numpy as np
 
+#-----
+
+#dqn_ptan.ipynb
 SEED = 123
 
 HYPERPARAMS = {
@@ -72,3 +76,50 @@ def batch_generator(buffer, initial, batch_size):
         buffer.populate(1)
         yield buffer.sample(batch_size)
         
+
+#dqn_ptan.ipynb
+def unpack_batch_(batch):
+    states, actions, rewards, dones, last_states = [],[],[],[],[]
+    for exp in batch:
+        state = np.array(exp.state)
+        states.append(state)
+        actions.append(exp.action)
+        rewards.append(exp.reward)
+        dones.append(exp.last_state is None)
+        if exp.last_state is None:
+            lstate = state  # the result will be masked anyway
+        else:
+            lstate = np.array(exp.last_state)
+        last_states.append(lstate)
+    return np.array(states, copy=False), np.array(actions), \
+           np.array(rewards, dtype=np.float32), \
+           np.array(dones, dtype=np.uint8), \
+           np.array(last_states, copy=False)
+
+def unpack_batch(batch):
+    states, actions, rewards, dones, last_states = [],[],[],[],[]
+    for exp in batch:
+        state = np.array(exp.state)
+        states.append(state)
+        actions.append(exp.action)
+        rewards.append(exp.reward)
+        dones.append(exp.last_state is None)
+        if exp.last_state is None:
+            lstate = state  # the result will be masked anyway
+        else:
+            lstate = np.array(exp.last_state)
+        last_states.append(lstate)
+    
+    states = np.array(states, copy=False)
+    #actions = np.array(actions)
+    #rewards = np.array(rewards, dtype=np.float32)
+    #dones = np.array(dones, dtype=np.uint8)
+    next_states = np.array(last_states, copy=False)
+    
+    states_v = torch.tensor(states).to(device)
+    next_states_v = torch.tensor(next_states).to(device)
+    actions_v = torch.tensor(actions).to(device)
+    rewards_v = torch.tensor(rewards, dtype=torch.float32).to(device)
+    done_mask = torch.BoolTensor(dones).to(device)
+    
+    return states_v, actions_v, rewards_v, next_states_v, done_mask
